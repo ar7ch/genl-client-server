@@ -1,0 +1,13 @@
+Checks: |
+  -*,                               # disable all checks by default
+  clang-diagnostic-*,                # Enable all compiler diagnostic checks
+  -clang-diagnostic-unused-value,    # Disable specific clang diagnostic check
+  clang-analyzer-*,                  # Enable all clang-analyzer checks
+  bugprone-*,                        # Enable all bugprone checks
+  -bugprone-easily-swappable-parameters,  # Disable easily-swappable-parameters check
+  performance-*,                     # Enable all performance-related checks
+  readability-*,                     # Enable all readability-related checks
+  -readability-magic-numbers,        # Disable readability check for magic numbers
+  -readability-braces-around-statements, # Disable braces-around-statements check-
+WarningsAsErrors: ''
+FormatStyle: 'file'                  # Use .clang-format if present

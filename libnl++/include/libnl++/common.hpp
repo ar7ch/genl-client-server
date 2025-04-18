@@ -1,8 +1,8 @@
 #pragma once
 
+#include <libnl++/wlanapp_common.hpp>
 #include <netlink/netlink.h>
 #include <utility>
-#include <wlanapp_common.hpp>
 
 class NetlinkManager;
 class NetlinkSocket;

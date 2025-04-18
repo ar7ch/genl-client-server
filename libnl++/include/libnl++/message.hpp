@@ -7,7 +7,6 @@
 #include <netlink/handlers.h>
 #include <netlink/netlink.h>
 #include <netlink/socket.h>
-#include <nl80211_copy.h>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
@@ -53,10 +52,11 @@ public:
   struct nl_msg *get() { return nlmsg.get(); }
 
   NetlinkMessage &put_header(uint8_t nl_cmd, int nl80211_family_id);
-  NetlinkMessage &put_vendor_id(u32 vendor_id);
-  NetlinkMessage &put_vendor_subcmd(u32 cmdid);
-  NetlinkMessage &put_iface_idx(const std::string &iface);
-  NetlinkMessage &start_vendor_attr_block();
+  NetlinkMessage &put_vendor_id(u32 vendor_id, int attr_vendor_id);
+  NetlinkMessage &put_vendor_subcmd(u32 cmdid, const int attr_vendor_subcmd);
+  NetlinkMessage &put_iface_idx(const std::string &iface,
+                                const int attr_ifindex);
+  NetlinkMessage &start_vendor_attr_block(const int vendor_attr);
   NetlinkMessage &end_vendor_attr_block();
 
   /**

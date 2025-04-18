@@ -3,7 +3,6 @@
 #include <memory>
 #include <netlink/genl/genl.h>
 #include <netlink/handlers.h>
-#include <nl80211_copy.h>
 #include <stdexcept>
 
 class NlCbDeleter {

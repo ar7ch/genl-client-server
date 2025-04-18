@@ -3,13 +3,13 @@
 #include "common.hpp"
 #include "message.hpp"
 #include "spdlog/spdlog.h"
+#include "wlanapp_common.hpp"
 #include <memory>
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
 #include <netlink/socket.h>
 #include <stdexcept>
-#include <wlanapp_common.hpp>
 
 class NlSockDeleter {
 public:

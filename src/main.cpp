@@ -1,6 +1,3 @@
-#include <netlink/genl/mngt.h>
+#include <libnl++/genl.hpp>
 
-int main() {
-  struct genl_ops ops = {.o_name = (char *)"ar7ch"};
-  genl_register_family(&ops);
-}
+int main() { genl::Family::register_family("ar7ch"); }
