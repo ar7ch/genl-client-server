@@ -35,6 +35,7 @@ include_directories(${CMAKE_INCLUDE_PATH}
 	${CMAKE_SOURCE_DIR}/src/nl
 	libs/cli11/include
 	libs/spdlog/include
+	libs/include
 )
 
 # find libnl-genl on system
