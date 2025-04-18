@@ -111,33 +111,34 @@ public:
     }
   }
 
-  /*
-   * Create an event socket into an event socket.
-   * @param multicast_group_name multicast group you want to join
-   */
-  static NetlinkSocket
-  CreateEventSocket(const std::string &multicast_group_name = "vendor") {
-    const std::string GENL_FAMILY_NLCTRL{"nlctrl"};
-    NetlinkSocket event_socket;
-    NetlinkSocket cmd_socket{NETLINK_GENERIC, GENL_FAMILY_NLCTRL};
-
-    NetlinkMessage family_req_msg;
-    family_req_msg.put_header(CTRL_CMD_GETFAMILY, cmd_socket.get_nl_family_id())
-        .put_string(CTRL_ATTR_FAMILY_NAME, "nl80211");
-
-    FamilyCmdContext cmd_ctx = {.group = multicast_group_name, .id = -ENOENT};
-    spdlog::debug("Sending get multicast groups request");
-    cmd_socket.send_msg(family_req_msg);
-    cmd_socket.recv_msg({NetlinkMessage::parse_mcast_group_response,
-                         static_cast<void *>(&cmd_ctx)});
-
-    if (cmd_ctx.id == -ENOENT) {
-      throw std::runtime_error("recv family id failed");
-    }
-    int vendor_mcast_group_id = cmd_ctx.id;
-    event_socket._add_membership(vendor_mcast_group_id);
-    return event_socket;
-  }
+  // /*
+  //  * Create an event socket into an event socket.
+  //  * @param multicast_group_name multicast group you want to join
+  //  */
+  // static NetlinkSocket
+  // CreateEventSocket(const std::string &multicast_group_name = "vendor") {
+  //   const std::string GENL_FAMILY_NLCTRL{"nlctrl"};
+  //   NetlinkSocket event_socket;
+  //   NetlinkSocket cmd_socket{NETLINK_GENERIC, GENL_FAMILY_NLCTRL};
+  //
+  //   NetlinkMessage family_req_msg;
+  //   family_req_msg.put_header(CTRL_CMD_GETFAMILY,
+  //   cmd_socket.get_nl_family_id())
+  //       .put_string(CTRL_ATTR_FAMILY_NAME, "nl80211");
+  //
+  //   FamilyCmdContext cmd_ctx = {.group = multicast_group_name, .id =
+  //   -ENOENT}; spdlog::debug("Sending get multicast groups request");
+  //   cmd_socket.send_msg(family_req_msg);
+  //   cmd_socket.recv_msg({NetlinkMessage::parse_mcast_group_response,
+  //                        static_cast<void *>(&cmd_ctx)});
+  //
+  //   if (cmd_ctx.id == -ENOENT) {
+  //     throw std::runtime_error("recv family id failed");
+  //   }
+  //   int vendor_mcast_group_id = cmd_ctx.id;
+  //   event_socket._add_membership(vendor_mcast_group_id);
+  //   return event_socket;
+  // }
 
   struct RxCallbacks {
     static int default_ack_handler(struct nl_msg *msg, void *arg);

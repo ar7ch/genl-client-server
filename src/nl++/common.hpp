@@ -30,8 +30,6 @@ struct RecvContext {
   }
 };
 
-static const u32 QCA_OUI = 0x001374;
-
 static const unsigned int WLANAPP_NL_CMD_SOCK_PORT = 888;
 static const constexpr unsigned int WLANAPP_NL_EVENT_SOCK_PORT = 889;
 static const unsigned NL80211_ATTR_MAX_INTERNAL = 256;

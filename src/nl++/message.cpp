@@ -1,7 +1,7 @@
-#include "nl_message.hpp"
-#include "spdlog/spdlog.h"
 #include <cerrno>
+#include <message.hpp>
 #include <net/if.h>
+#include <spdlog/spdlog.h>
 
 nlmsg_unique_ptr NetlinkMessage::create_nlmsg() {
   struct nl_msg *nlmsg_raw = nlmsg_alloc();
