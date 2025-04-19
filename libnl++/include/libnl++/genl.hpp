@@ -2,6 +2,8 @@
 
 #include <string>
 
+namespace nl {
+
 namespace genl {
 class Family {
 public:
@@ -9,3 +11,5 @@ public:
 };
 
 }; // namespace genl
+   //
+}; // namespace nl

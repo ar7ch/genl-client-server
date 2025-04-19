@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.hpp"
+#include <libnl++/wlanapp_common.hpp>
 #include <memory>
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
@@ -10,13 +10,11 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
+namespace nl {
+
 class NlMsgDeleter {
 public:
-  void operator()(struct nl_msg *nlmsg) const {
-    if (nlmsg != nullptr) {
-      nlmsg_free(nlmsg);
-    }
-  }
+  void operator()(struct nl_msg *nlmsg) const;
 };
 
 struct FamilyCmdContext {
@@ -54,9 +52,8 @@ public:
   NetlinkMessage &put_header(uint8_t nl_cmd, int nl80211_family_id);
   NetlinkMessage &put_vendor_id(u32 vendor_id, int attr_vendor_id);
   NetlinkMessage &put_vendor_subcmd(u32 cmdid, const int attr_vendor_subcmd);
-  NetlinkMessage &put_iface_idx(const std::string &iface,
-                                const int attr_ifindex);
-  NetlinkMessage &start_vendor_attr_block(const int vendor_attr);
+  NetlinkMessage &put_iface_idx(const std::string &iface, int attr_ifindex);
+  NetlinkMessage &start_vendor_attr_block(int vendor_attr);
   NetlinkMessage &end_vendor_attr_block();
 
   /**
@@ -82,12 +79,7 @@ public:
     return *this;
   }
 
-  NetlinkMessage &put_string(int attr, const std::string &data) {
-    int res = nla_put(nlmsg.get(), attr, (int)data.length() + 1, data.c_str());
-    if (res != 0) {
-      spdlog::error("nla_put failed for attr id {} and string {}", attr, data);
-      throw std::bad_alloc();
-    }
-    return *this;
-  }
+  NetlinkMessage &put_string(int attr, const std::string &data);
 };
+
+} // namespace nl

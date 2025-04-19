@@ -2,6 +2,7 @@
 #include <netlink/genl/mngt.h>
 #include <spdlog/spdlog.h>
 
+namespace nl {
 namespace genl {
 
 void Family::register_family(const std::string &family_name) {
@@ -13,4 +14,5 @@ void Family::register_family(const std::string &family_name) {
   }
 };
 
-}; // namespace genl
+} // namespace genl
+} // namespace nl

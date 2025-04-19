@@ -1,7 +1,16 @@
+#include "libnl++/wlanapp_common.hpp"
 #include <cerrno>
 #include <libnl++/message.hpp>
 #include <net/if.h>
 #include <spdlog/spdlog.h>
+
+namespace nl {
+
+void NlMsgDeleter::operator()(struct nl_msg *nlmsg) const {
+  if (nlmsg != nullptr) {
+    nlmsg_free(nlmsg);
+  }
+}
 
 nlmsg_unique_ptr NetlinkMessage::create_nlmsg() {
   struct nl_msg *nlmsg_raw = nlmsg_alloc();
@@ -76,3 +85,14 @@ NetlinkMessage &NetlinkMessage::end_vendor_attr_block() {
   nla_nest_end(nlmsg.get(), nested_attr_start);
   return *this;
 }
+
+NetlinkMessage &NetlinkMessage::put_string(int attr, const std::string &data) {
+  int res = nla_put(nlmsg.get(), attr, (int)data.length() + 1, data.c_str());
+  if (res != 0) {
+    spdlog::error("nla_put failed for attr id {} and string {}", attr, data);
+    throw std::bad_alloc();
+  }
+  return *this;
+}
+
+}; // namespace nl

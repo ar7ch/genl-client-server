@@ -1,23 +1,21 @@
 #pragma once
-#include "callback.hpp"
-#include "common.hpp"
-#include "message.hpp"
-#include "spdlog/spdlog.h"
-#include "wlanapp_common.hpp"
+#include <libnl++/callback.hpp>
+#include <libnl++/common.hpp>
+#include <libnl++/message.hpp>
+#include <libnl++/wlanapp_common.hpp>
 #include <memory>
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
-#include <netlink/socket.h>
-#include <stdexcept>
+#include <spdlog/spdlog.h>
+
+/*struct nl_sock;*/
+
+namespace nl {
 
 class NlSockDeleter {
 public:
-  void operator()(struct nl_sock *nlsock) const {
-    if (nlsock != nullptr) {
-      nl_socket_free(nlsock);
-    }
-  }
+  void operator()(struct nl_sock *nlsock) const;
 };
 
 using nlsock_unique_ptr = std::unique_ptr<struct nl_sock, NlSockDeleter>;
@@ -28,57 +26,40 @@ class NetlinkSocket {
   int nl_family_id;
   NetlinkCallbackSet nlcbs;
 
-  static nlsock_unique_ptr _create_nl_socket(int protocol) {
-    struct nl_sock *sock_raw = nl_socket_alloc();
-    if (sock_raw == NULL) {
-      throw std::runtime_error("Failed to create NL socket");
-    }
-    if (nl_connect(sock_raw, protocol) != 0) {
-      nl_socket_free(sock_raw);
-      throw std::runtime_error("nl_connect failed");
-    }
-    nlsock_unique_ptr nlsock{sock_raw};
-    return nlsock;
-  }
+  /*
+   * Libnl wrapper: creates netlink socket and connects to a given protocol.
+   */
+  static nlsock_unique_ptr _create_nl_socket(int protocol);
 
-  int _resolve_genl_family_id(const std::string &name) {
-    nl_family_id = genl_ctrl_resolve(nlsock.get(), name.c_str());
-    if (nl_family_id < 0) {
-      throw std::runtime_error("Could not resolve family id " + name);
-    }
-    return nl_family_id;
-  }
+  /*
+   * Libnl wrapper: resolves family id by string name
+   */
+  int _resolve_genl_family_id(const std::string &name);
 
-  void _send_msg_auto(NetlinkMessage &nlmsg) {
-    int ret = nl_send_auto_complete(nlsock.get(), nlmsg.get());
-    if (ret < 0) {
-      throw std::runtime_error("Sending netlink message failed");
-    }
-  }
+  /*
+   * Libnl wrapper: send netlink message
+   */
+  void _send_msg_auto(NetlinkMessage &nlmsg);
 
-  void _add_membership(int multicast_group_id) {
-    int ret = nl_socket_add_membership(nlsock.get(), multicast_group_id);
-    if (ret < 0) {
-      throw std::runtime_error(fmt::format(
-          "Failed to add multicast membership {}: {}", ret, strerror(-ret)));
-    }
-  }
+  /*
+   * Libnl wrapper: add group membership (for multicast groups)
+   */
+  void _add_membership(int multicast_group_id);
 
-  void _set_default_callbacks() {
-    spdlog::debug("Start registering default callbacks");
-    nlcbs.register_cb(NL_CB_SEQ_CHECK, RxCallbacks::default_seq_disable, NULL);
-    nlcbs.register_cb(NL_CB_FINISH, RxCallbacks::default_finish_handler, this);
-    nlcbs.register_cb(NL_CB_ACK, RxCallbacks::default_ack_handler, this);
-    nlcbs.register_err_cb(RxCallbacks::default_error_handler, this);
-    nlcbs.register_cb(NL_CB_VALID, RxCallbacks::response_handler_wrapper, this);
-    nl_socket_set_cb(nlsock.get(), nlcbs.get());
-    spdlog::debug("Register default callbacks ok");
-  }
+  /*
+   * Libnl wrapper: set local port
+   */
+  void _set_local_port(u32 port);
+
+  /*
+   * Libnl wrapper: set default callbacks
+   */
+  void _set_default_callbacks();
 
 public:
   RecvContext recv_ctx;
-  NetlinkSocket(int nl_protocol = NETLINK_GENERIC,
-                const std::string &genl_family_name = "nl80211")
+  NetlinkSocket(const std::string &genl_family_name,
+                int nl_protocol = NETLINK_GENERIC)
       : nlsock(_create_nl_socket(nl_protocol)),
         genl_family_name{genl_family_name},
         nl_family_id{_resolve_genl_family_id(genl_family_name)} {
@@ -149,3 +130,5 @@ public:
     static int response_handler_wrapper(struct nl_msg *msg, void *arg);
   };
 };
+
+} // namespace nl

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(genl-client-server VERSION 1.0 LANGUAGES CXX)
+project(genl-app VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,7 +21,7 @@ include_directories(${CMAKE_INCLUDE_PATH})
 
 # Source files
 set(SOURCES
-	src/main.cpp
+	src/genl-app.cpp
 )
 
 # add executable
@@ -41,7 +41,7 @@ add_subdirectory(libnl++)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 target_compile_options(${PROJECT_NAME} PRIVATE -fpermissive -Wno-unused-parameter -Wfatal-errors)
-target_link_libraries(${PROJECT_NAME} PRIVATE libnl++ CLI11::CLI11)
+target_link_libraries(${PROJECT_NAME} PRIVATE nl++ CLI11::CLI11)
 
 # allow the user to specify the installation directory via cmake variable
 set(INSTALL_DIR_DEFAULT "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory")
