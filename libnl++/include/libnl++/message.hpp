@@ -12,7 +12,7 @@
 
 namespace nl {
 
-class NlMsgDeleter {
+class MessageDeleter {
 public:
   void operator()(struct nl_msg *nlmsg) const;
 };
@@ -22,14 +22,14 @@ struct FamilyCmdContext {
   int id;
 };
 
-using nlmsg_unique_ptr = std::unique_ptr<struct nl_msg, NlMsgDeleter>;
+using nlmsg_unique_ptr = std::unique_ptr<struct nl_msg, MessageDeleter>;
 using nlmsg_raw_ptr = struct nl_msg *;
 
 /*
  * Class that stores and builds a netlink message (a thick wrapper around struct
  * nl_msg et al)
  */
-class NetlinkMessage {
+class Message {
   nlmsg_unique_ptr nlmsg;
 
   /* we keep a raw ptr to the start of a nested attribute - it is a portion of
@@ -38,23 +38,18 @@ class NetlinkMessage {
    */
   struct nlattr *nested_attr_start = nullptr;
   static nlmsg_unique_ptr create_nlmsg();
-  NetlinkMessage(const NetlinkMessage &other) = delete;
-  NetlinkMessage &operator=(const NetlinkMessage &other) = delete;
+  Message(const Message &other) = delete;
+  Message &operator=(const Message &other) = delete;
 
 public:
   // move constructors are allowed - we use an underlying unique_ptr
-  NetlinkMessage(NetlinkMessage &&other) = default;
-  NetlinkMessage &operator=(NetlinkMessage &&other) = default;
+  Message(Message &&other) = default;
+  Message &operator=(Message &&other) = default;
 
-  NetlinkMessage() : nlmsg(create_nlmsg()) {}
+  Message() : nlmsg(create_nlmsg()) {}
   struct nl_msg *get() { return nlmsg.get(); }
 
-  NetlinkMessage &put_header(uint8_t nl_cmd, int nl80211_family_id);
-  NetlinkMessage &put_vendor_id(u32 vendor_id, int attr_vendor_id);
-  NetlinkMessage &put_vendor_subcmd(u32 cmdid, const int attr_vendor_subcmd);
-  NetlinkMessage &put_iface_idx(const std::string &iface, int attr_ifindex);
-  NetlinkMessage &start_vendor_attr_block(int vendor_attr);
-  NetlinkMessage &end_vendor_attr_block();
+  Message &put_header(uint8_t nl_cmd, int nl80211_family_id);
 
   /**
    * Add a unspecific attribute to netlink message.
@@ -70,7 +65,7 @@ public:
    * @see nla_reserve
    * @return 0 on success or a negative error code.
    */
-  template <typename T> NetlinkMessage &put_attr(int attr, T data) {
+  template <typename T> Message &put_attr(int attr, T data) {
     int res = nla_put(nlmsg.get(), attr, sizeof(T), &data);
     if (res != 0) {
       throw std::runtime_error(
@@ -78,8 +73,13 @@ public:
     }
     return *this;
   }
+  Message &put_vendor_id(u32 vendor_id, int attr_vendor_id);
+  Message &put_vendor_subcmd(u32 cmdid, const int attr_vendor_subcmd);
+  Message &put_iface_idx(const std::string &iface, int attr_ifindex);
+  Message &start_vendor_attr_block(int vendor_attr);
+  Message &end_vendor_attr_block();
 
-  NetlinkMessage &put_string(int attr, const std::string &data);
+  Message &put_string(int attr, const std::string &data);
 };
 
 } // namespace nl

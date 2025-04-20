@@ -5,6 +5,8 @@
 #include <netlink/handlers.h>
 #include <stdexcept>
 
+namespace nl {
+
 class NlCbDeleter {
 public:
   void operator()(struct nl_cb *nlcb) const {
@@ -65,3 +67,4 @@ public:
     }
   }
 };
+} // namespace nl

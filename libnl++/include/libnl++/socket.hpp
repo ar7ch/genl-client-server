@@ -20,7 +20,7 @@ public:
 
 using nlsock_unique_ptr = std::unique_ptr<struct nl_sock, NlSockDeleter>;
 
-class NetlinkSocket {
+class Socket {
   nlsock_unique_ptr nlsock;
   std::string genl_family_name;
   int nl_family_id;
@@ -39,7 +39,7 @@ class NetlinkSocket {
   /*
    * Libnl wrapper: send netlink message
    */
-  void _send_msg_auto(NetlinkMessage &nlmsg);
+  void _send_msg_auto(Message &nlmsg);
 
   /*
    * Libnl wrapper: add group membership (for multicast groups)
@@ -52,19 +52,27 @@ class NetlinkSocket {
   void _set_local_port(u32 port);
 
   /*
+   * Libnl wrapper: set remote port
+   */
+  void _set_peer_port(u32 port);
+
+  /*
    * Libnl wrapper: set default callbacks
    */
   void _set_default_callbacks();
 
 public:
   RecvContext recv_ctx;
-  NetlinkSocket(const std::string &genl_family_name,
-                int nl_protocol = NETLINK_GENERIC)
+  Socket(const std::string &genl_family_name, int nl_protocol = NETLINK_GENERIC)
       : nlsock(_create_nl_socket(nl_protocol)),
         genl_family_name{genl_family_name},
         nl_family_id{_resolve_genl_family_id(genl_family_name)} {
     _set_default_callbacks();
   }
+
+  void set_local_port(u32 port) { _set_local_port(port); }
+
+  void set_peer_port(u32 port) { _set_peer_port(port); }
 
   int get_nl_family_id() const { return nl_family_id; }
 
@@ -72,7 +80,7 @@ public:
    * Send netlink message.
    * @param nlmsg Netlink message
    */
-  void send_msg(NetlinkMessage &nlmsg) { _send_msg_auto(nlmsg); }
+  void send_msg(Message &nlmsg) { _send_msg_auto(nlmsg); }
 
   /*
    * Receive netlink message.
@@ -81,8 +89,8 @@ public:
    */
   void recv_msg(const std::pair<NetlinkValidCallback, void *> &cb_ctx_pair) {
     recv_ctx.valid_cb_ctx_pair = cb_ctx_pair;
-    recv_ctx.nl_recv_status = NetlinkRecvStatus::CONTINUE;
-    while (recv_ctx.nl_recv_status == NetlinkRecvStatus::CONTINUE) {
+    recv_ctx.nl_recv_status = RecvStatus::CONTINUE;
+    while (recv_ctx.nl_recv_status == RecvStatus::CONTINUE) {
       spdlog::debug("starting recv()");
       int res = nl_recvmsgs(nlsock.get(), nlcbs.get());
       if (res != 0) {
