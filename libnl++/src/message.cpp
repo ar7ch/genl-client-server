@@ -21,10 +21,9 @@ nlmsg_unique_ptr Message::create_nlmsg() {
   return nlmsg;
 }
 
-Message &Message::put_header(uint8_t nl_cmd,
-                                           int family_id) {
+Message &Message::put_header(uint8_t nl_cmd, int family_id, u32 port) {
   u8 *hdr_ptr = (u8 *)genlmsg_put(nlmsg.get(),
-                                  /* pid= */ 0,
+                                  /* pid= */ port,
                                   /* seq= */ 0,
                                   /* family= */ family_id,
                                   /* hdrlen= */ 0,
@@ -39,8 +38,7 @@ Message &Message::put_header(uint8_t nl_cmd,
   return *this;
 }
 
-Message &Message::put_vendor_id(u32 vendor_id,
-                                              int attr_vendor_id) {
+Message &Message::put_vendor_id(u32 vendor_id, int attr_vendor_id) {
   int ret = nla_put(nlmsg.get(), attr_vendor_id, sizeof(u32), &vendor_id);
   if (ret != 0) {
     throw std::runtime_error("put_vendor_id failed");
@@ -48,9 +46,8 @@ Message &Message::put_vendor_id(u32 vendor_id,
   return *this;
 }
 
-Message &
-Message::put_vendor_subcmd(const u32 cmdid,
-                                  const int attr_vendor_subcmd) {
+Message &Message::put_vendor_subcmd(const u32 cmdid,
+                                    const int attr_vendor_subcmd) {
   int res = nla_put(nlmsg.get(), attr_vendor_subcmd, sizeof(u32), &cmdid);
   if (res != 0) {
     throw std::runtime_error("put_vendor_subcmd failed");
@@ -59,7 +56,7 @@ Message::put_vendor_subcmd(const u32 cmdid,
 }
 
 Message &Message::put_iface_idx(const std::string &iface,
-                                              const int attr_ifindex) {
+                                const int attr_ifindex) {
   u32 iface_idx = if_nametoindex(iface.c_str());
   if (iface_idx == 0) {
     std::string err_msg{fmt::format(

@@ -28,11 +28,12 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 include_directories(${CMAKE_INCLUDE_PATH}
-	${CMAKE_SOURCE_DIR}/src
+	SYSTEM
 	libs/cli11/include
 	libs/spdlog/include
 	libs/include
 )
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 
 add_subdirectory(libs/cli11)

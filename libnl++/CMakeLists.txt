@@ -24,12 +24,16 @@ target_sources(${LIB_NAME}
 )
 
 # Set include directories for consumers
-target_include_directories(${LIB_NAME}
-# PRIVATE
+target_include_directories(${LIB_NAME} SYSTEM
 	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
 		${LIBNL_GENL_INCLUDE_DIRS}
 		${LIBNL_GENL_INCLUDE_DIRS}/libnl3
+)
+
+
+target_include_directories(${LIB_NAME}
+	PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_compile_options(${LIB_NAME} PRIVATE -Wall -Wfatal-errors)

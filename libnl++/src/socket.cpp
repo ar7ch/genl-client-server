@@ -1,4 +1,5 @@
 #include <libnl++/socket.hpp>
+#include <netlink/errno.h>
 #include <netlink/socket.h>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
@@ -11,11 +12,12 @@ void NlSockDeleter::operator()(struct nl_sock *nlsock) const {
   }
 }
 
-nlsock_unique_ptr Socket::_create_nl_socket(int protocol) {
+nlsock_unique_ptr Socket::_create_nl_socket(int protocol, u32 port) {
   struct nl_sock *sock_raw = nl_socket_alloc();
   if (sock_raw == NULL) {
     throw std::runtime_error("Failed to create NL socket");
   }
+  nl_socket_set_local_port(sock_raw, port);
   if (nl_connect(sock_raw, protocol) != 0) {
     nl_socket_free(sock_raw);
     throw std::runtime_error("nl_connect failed");
@@ -24,18 +26,11 @@ nlsock_unique_ptr Socket::_create_nl_socket(int protocol) {
   return nlsock;
 }
 
-int Socket::_resolve_genl_family_id(const std::string &name) {
-  nl_family_id = genl_ctrl_resolve(nlsock.get(), name.c_str());
-  if (nl_family_id < 0) {
-    throw std::runtime_error("Could not resolve family id " + name);
-  }
-  return nl_family_id;
-}
-
 void Socket::_send_msg_auto(Message &nlmsg) {
   int ret = nl_send_auto_complete(nlsock.get(), nlmsg.get());
   if (ret < 0) {
-    throw std::runtime_error("Sending netlink message failed");
+    throw std::runtime_error(fmt::format(
+        "Sending netlink message failed, ret={} ({})", ret, nl_geterror(ret)));
   }
 }
 
@@ -50,6 +45,10 @@ void Socket::_set_local_port(const u32 port) {
   nl_socket_set_local_port(nlsock.get(), port);
 }
 
+void Socket::_set_peer_port(u32 port) {
+  nl_socket_set_peer_port(nlsock.get(), port);
+}
+
 void Socket::_set_default_callbacks() {
   spdlog::debug("Start registering default callbacks");
   nlcbs.register_cb(NL_CB_SEQ_CHECK, RxCallbacks::default_seq_disable, NULL);
@@ -61,8 +60,7 @@ void Socket::_set_default_callbacks() {
   spdlog::debug("Register default callbacks ok");
 }
 
-int Socket::RxCallbacks::default_ack_handler(struct nl_msg *msg,
-                                                    void *arg) {
+int Socket::RxCallbacks::default_ack_handler(struct nl_msg *msg, void *arg) {
   spdlog::debug("Ack callback triggered");
   if (arg == nullptr) {
     throw std::invalid_argument("passed null argument to ack handler");
@@ -72,8 +70,7 @@ int Socket::RxCallbacks::default_ack_handler(struct nl_msg *msg,
   return NL_STOP;
 }
 
-int Socket::RxCallbacks::default_finish_handler(struct nl_msg *msg,
-                                                       void *arg) {
+int Socket::RxCallbacks::default_finish_handler(struct nl_msg *msg, void *arg) {
   spdlog::debug("Finish callback triggered");
   if (arg == nullptr) {
     throw std::invalid_argument("passed null argument to finish handler");
@@ -84,8 +81,8 @@ int Socket::RxCallbacks::default_finish_handler(struct nl_msg *msg,
 }
 
 int Socket::RxCallbacks::default_error_handler(struct sockaddr_nl *nla,
-                                                      struct nlmsgerr *err,
-                                                      void *arg) {
+                                               struct nlmsgerr *err,
+                                               void *arg) {
   spdlog::debug("Error callback triggered");
   if (arg == nullptr) {
     throw std::invalid_argument("passed null argument to error handler");
@@ -97,13 +94,12 @@ int Socket::RxCallbacks::default_error_handler(struct sockaddr_nl *nla,
   return NL_SKIP;
 }
 
-int Socket::RxCallbacks::default_seq_disable(struct nl_msg *msg,
-                                                    void *arg) {
+int Socket::RxCallbacks::default_seq_disable(struct nl_msg *msg, void *arg) {
   return NL_OK;
 }
 
 int Socket::RxCallbacks::response_handler_wrapper(struct nl_msg *msg,
-                                                         void *arg) {
+                                                  void *arg) {
   if (arg == nullptr) {
     throw std::invalid_argument("passed null argument to finish handler");
   }

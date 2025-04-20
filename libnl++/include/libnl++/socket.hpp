@@ -21,20 +21,14 @@ public:
 using nlsock_unique_ptr = std::unique_ptr<struct nl_sock, NlSockDeleter>;
 
 class Socket {
+protected:
   nlsock_unique_ptr nlsock;
-  std::string genl_family_name;
-  int nl_family_id;
   NetlinkCallbackSet nlcbs;
 
   /*
    * Libnl wrapper: creates netlink socket and connects to a given protocol.
    */
-  static nlsock_unique_ptr _create_nl_socket(int protocol);
-
-  /*
-   * Libnl wrapper: resolves family id by string name
-   */
-  int _resolve_genl_family_id(const std::string &name);
+  static nlsock_unique_ptr _create_nl_socket(int protocol, u32 port = 0);
 
   /*
    * Libnl wrapper: send netlink message
@@ -63,18 +57,20 @@ class Socket {
 
 public:
   RecvContext recv_ctx;
-  Socket(const std::string &genl_family_name, int nl_protocol = NETLINK_GENERIC)
-      : nlsock(_create_nl_socket(nl_protocol)),
-        genl_family_name{genl_family_name},
-        nl_family_id{_resolve_genl_family_id(genl_family_name)} {
+
+  /*
+   * Socket ctor.
+   * @arg nl_protocol - netlink protocol to use
+   * @arg port - port to bind socket on, if equal to zero libnl chooses port by
+   */
+  Socket(int nl_protocol, u32 port = 0)
+      : nlsock(_create_nl_socket(nl_protocol, port)) {
     _set_default_callbacks();
   }
 
   void set_local_port(u32 port) { _set_local_port(port); }
 
   void set_peer_port(u32 port) { _set_peer_port(port); }
-
-  int get_nl_family_id() const { return nl_family_id; }
 
   /*
    * Send netlink message.

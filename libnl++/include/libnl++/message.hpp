@@ -12,7 +12,7 @@
 
 namespace nl {
 
-class MessageDeleter {
+class NlMsgDeleter {
 public:
   void operator()(struct nl_msg *nlmsg) const;
 };
@@ -22,7 +22,7 @@ struct FamilyCmdContext {
   int id;
 };
 
-using nlmsg_unique_ptr = std::unique_ptr<struct nl_msg, MessageDeleter>;
+using nlmsg_unique_ptr = std::unique_ptr<struct nl_msg, NlMsgDeleter>;
 using nlmsg_raw_ptr = struct nl_msg *;
 
 /*
@@ -49,7 +49,7 @@ public:
   Message() : nlmsg(create_nlmsg()) {}
   struct nl_msg *get() { return nlmsg.get(); }
 
-  Message &put_header(uint8_t nl_cmd, int nl80211_family_id);
+  Message &put_header(uint8_t nl_cmd, int family_id, u32 port);
 
   /**
    * Add a unspecific attribute to netlink message.
@@ -74,7 +74,7 @@ public:
     return *this;
   }
   Message &put_vendor_id(u32 vendor_id, int attr_vendor_id);
-  Message &put_vendor_subcmd(u32 cmdid, const int attr_vendor_subcmd);
+  Message &put_vendor_subcmd(u32 cmdid, int attr_vendor_subcmd);
   Message &put_iface_idx(const std::string &iface, int attr_ifindex);
   Message &start_vendor_attr_block(int vendor_attr);
   Message &end_vendor_attr_block();
